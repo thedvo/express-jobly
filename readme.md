@@ -7,5 +7,6 @@ To run this:
     node server.js
     
 To run the tests:
+<!-- Any time you run our tests here, you will need to use the -i flag for Jest, so that the tests run “in band” (in order, not at the same time). -->
 
     jest -i
