@@ -138,7 +138,54 @@ class User {
 
 		if (!user) throw new NotFoundError(`No user: ${username}`);
 
+		// make another query to Applications table
+		// adds user's job applications to the query result object
+		const userApplications = await db.query(
+			`SELECT a.job_id
+           FROM applications AS a
+           WHERE a.username = $1`,
+			[username]
+		);
+
+		user.applications = userApplications.rows.map((a) => a.job_id);
 		return user;
+	}
+
+	/** STEP 5: Apply for job: update db, returns undefined.
+	 *
+	 * Accepts:
+	 * - username: username applying for job
+	 * - jobId: job id
+	 **/
+	static async applyToJob(username, jobId) {
+		// first check if the job exists in the database
+		const checkJob = await db.query(
+			`SELECT id
+           FROM jobs
+           WHERE id = $1`,
+			[jobId]
+		);
+		const job = checkJob.rows[0];
+
+		if (!job) throw new NotFoundError(`No job: ${jobId}`);
+
+		// check if the user exists in the database
+		const checkUser = await db.query(
+			`SELECT username
+           FROM users
+           WHERE username = $1`,
+			[username]
+		);
+		const user = checkUser.rows[0];
+
+		if (!user) throw new NotFoundError(`No username: ${username}`);
+
+		// once user and job are valid, make a query to insert into the Applications table
+		await db.query(
+			`INSERT INTO applications (job_id, username)
+           VALUES ($1, $2)`,
+			[jobId, username]
+		);
 	}
 
 	/** Update user data with `data`.
@@ -159,6 +206,7 @@ class User {
 	 */
 	// username is req.params.username from patch route
 	// data is req.body from the patch route
+
 	static async update(username, data) {
 		// if you want to update your password
 		if (data.password) {

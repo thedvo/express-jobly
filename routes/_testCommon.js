@@ -3,7 +3,10 @@
 const db = require('../db.js');
 const User = require('../models/user');
 const Company = require('../models/company');
+const Job = require('../models/job');
 const { createToken } = require('../helpers/tokens');
+
+const testJobIds = [];
 
 async function commonBeforeAll() {
 	// noinspection SqlWithoutWhere
@@ -33,6 +36,30 @@ async function commonBeforeAll() {
 		logoUrl: 'http://c3.img',
 	});
 
+	testJobIds[0] = (
+		await Job.create({
+			title: 'J1',
+			salary: 1,
+			equity: '0.1',
+			companyHandle: 'c1',
+		})
+	).id;
+	testJobIds[1] = (
+		await Job.create({
+			title: 'J2',
+			salary: 2,
+			equity: '0.2',
+			companyHandle: 'c1',
+		})
+	).id;
+	testJobIds[2] = (
+		await Job.create({
+			title: 'J3',
+			salary: 3,
+			/* equity null */ companyHandle: 'c1',
+		})
+	).id;
+
 	await User.register({
 		username: 'u1',
 		firstName: 'U1F',
@@ -57,6 +84,8 @@ async function commonBeforeAll() {
 		password: 'password3',
 		isAdmin: false,
 	});
+
+	await User.applyToJob('u1', testJobIds[0]);
 }
 
 // BEGIN initiates a transaction block, that is, all statements after a BEGIN command will be executed in a single transaction until an explicit COMMIT or ROLLBACK is given.
@@ -88,4 +117,5 @@ module.exports = {
 	u1Token,
 	u2Token,
 	adminToken,
+	testJobIds,
 };
